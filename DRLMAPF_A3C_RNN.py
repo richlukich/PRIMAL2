@@ -11,8 +11,8 @@ from Map_Generator import maze_generator
 import GroupLock
 from ACNet import ACNet
 from Env_Builder import *
-from PRIMAL2Env import PRIMAL2Env
-from PRIMAL2Observer import PRIMAL2Observer
+from Primal2Env import PRIMAL2Env
+from Primal2Observer import PRIMAL2Observer
 from PRIMALObserver import PRIMALObserver
 dev_list = device_lib.list_local_devices()
 
