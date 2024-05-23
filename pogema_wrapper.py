@@ -21,7 +21,7 @@ import os
 from pogema.generator import generate_new_target
 from copy import deepcopy
 
-class BatchAgent_test():
+class BatchAgent():
     
     def __init__(self,master_network,rnn_state,):
 
@@ -259,7 +259,7 @@ class Agent:
         self.action_history = _heap(self.action_history, 30)
 
 
-class PogemaWorld():
+class PogemaWrapper():
     def __init__(self,env):
         self.env = AnimationMonitor(env)
         self.num_future_steps = 3
@@ -1391,7 +1391,7 @@ grid_config.max_episode_steps = 256
 #grid_config.agents_xy = [(4,6),(6,2),(2,6),(3,4)]
 #grid_config.targets_xy = [(6,3),(6,0),(4,4),(4,6)]
 env = pogema_v0(grid_config=grid_config)
-pogema = PogemaWorld(env)
+pogema = PogemaWrapper(env)
 tf.reset_default_graph()
 print("Hello World")
 for path in [train_path, model_path, gifs_path]:
@@ -1435,7 +1435,7 @@ with tf.device("/gpu:0"):
             rnn_state = master_network.state_init
             rnn_state0 = rnn_state
 
-            agent = BatchAgent_test(master_network,rnn_state)
+            agent = BatchAgent(master_network,rnn_state)
 
             obs = pogema.reset()
             
