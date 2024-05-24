@@ -379,9 +379,12 @@ class PogemaWrapper():
         for i, pos in enumerate(goals):
             goal =  (pos[0] - self.observation_size // 2 + 1, pos[1] - self.observation_size // 2 + 1)
             if self.agents[i+1].goal_pos != goal:
-                self.goals_map[self.agents[i+1].goal_pos] = 0
-                self.agents[i+1].goal_pos = goal
-                self.goals_map[goal] = i + 1
+                if self.env.grid_config.on_target == 'finish':
+                    self.goals_map[self.agents[i+1].goal_pos] = 0          
+                else:
+                    self.goals_map[self.agents[i+1].goal_pos] = 0
+                    self.agents[i+1].goal_pos = goal
+                    self.goals_map[goal] = i + 1
 
                 if self.env.grid_config.on_target == 'restart':
                     new_goal = generate_new_target(self.generators[i],
@@ -1318,9 +1321,9 @@ OBS_SIZE                = 11   # the size of the FOV grid to apply to each agent
 NUM_FUTURE_STEPS        = 3
 
 # environment parameters
-ENVIRONMENT_SIZE        = (48, 48)  # the total size of the environment (length of one side)
-WALL_COMPONENTS         = (10, 21)
-OBSTACLE_DENSITY        = (0.2, 0.7)  # range of densities
+ENVIRONMENT_SIZE        = (16, 16)  # the total size of the environment (length of one side)
+WALL_COMPONENTS         = (5, 21)
+OBSTACLE_DENSITY        = (0.1, 0.1)  # range of densities
 CHANGE_FREQUENCY        = 5000       # Frequency of Changing environment params  
 DIAG_MVMT               = False  # Diagonal movements allowed?
 a_size                  = 5 + int(DIAG_MVMT) * 4
