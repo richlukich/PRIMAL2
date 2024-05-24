@@ -1323,7 +1323,7 @@ NUM_FUTURE_STEPS        = 3
 # environment parameters
 ENVIRONMENT_SIZE        = (16, 16)  # the total size of the environment (length of one side)
 WALL_COMPONENTS         = (5, 21)
-OBSTACLE_DENSITY        = (0.1, 0.1)  # range of densities
+OBSTACLE_DENSITY        = (0.2, 0.7)  # range of densities
 CHANGE_FREQUENCY        = 5000       # Frequency of Changing environment params  
 DIAG_MVMT               = False  # Diagonal movements allowed?
 a_size                  = 5 + int(DIAG_MVMT) * 4
