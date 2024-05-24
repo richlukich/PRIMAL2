@@ -275,7 +275,8 @@ class PogemaWrapper():
         self.goal_generate_distance = 2
         #self.env.save_animation("render.svg")
         self.agents_init_pos, self.goals_init_pos = None, None
-        self.generators = self.get_generators()
+        if self.env.grid_config.on_target == 'restart':
+            self.generators = self.get_generators()
         #self.reset()
 
     def get_generators(self):
@@ -316,16 +317,21 @@ class PogemaWrapper():
             self.goals_init_pos = {}
             self.goals_map = np.zeros((self.state.shape[0],self.state.shape[1]))
             #for na, pos in enumerate(self.env.grid_config.targets_xy):
-            for na, pos in enumerate(self.env.get_targets_xy(ignore_borders=False)):
-                 self.agents[na+1].goal_pos = (pos[0] - self.observation_size // 2 + 1, pos[1] - self.observation_size // 2 + 1) 
-                 #self.agents[na+1].goal_pos = (pos[0]+1,pos[1]+1)   
-                 self.goals_map[self.agents[na+1].goal_pos] = na + 1
-                 self.goals_init_pos[na+1] = self.agents[na+1].goal_pos
-                 new_goal = generate_new_target(self.generators[na],
+            poses = self.env.get_targets_xy(ignore_borders=False)
+            for na, pos in enumerate(poses):
+                self.agents[na+1].goal_pos = (pos[0] - self.observation_size // 2 + 1, pos[1] - self.observation_size // 2 + 1) 
+                #self.agents[na+1].goal_pos = (pos[0]+1,pos[1]+1)   
+                self.goals_map[self.agents[na+1].goal_pos] = na + 1
+                self.goals_init_pos[na+1] = self.agents[na+1].goal_pos
+                if self.env.grid_config.on_target == 'restart':
+                    new_goal = generate_new_target(self.generators[na],
                               self.env.grid.point_to_component,
                               self.env.grid.component_to_points,
                               self.env.grid.positions_xy[na])
-                 self.agents[na+1].next_goal = (new_goal[0]- self.observation_size // 2 + 1, new_goal[1]- self.observation_size // 2 + 1)
+                else:
+                    new_goal = poses[(na + 1) % (len(poses) - 1)]
+                 
+                self.agents[na+1].next_goal = (new_goal[0]- self.observation_size // 2 + 1, new_goal[1]- self.observation_size // 2 + 1)
         else:
             #for na, pos in enumerate(self.env.grid_config.targets_xy):
             for na, pos in enumerate(self.env.get_targets_xy(ignore_borders=False)):
@@ -358,6 +364,13 @@ class PogemaWrapper():
     
     def step(self, actions):
         actions = list(actions.values())
+
+        if self.env.grid_config.on_target == 'nothing':
+            goals = self.env.get_targets_xy(ignore_borders=False)
+            for na, pos in enumerate(self.env.get_agents_xy(ignore_borders=False)):
+                if goals[na] == pos:
+                    actions[na] = 0
+                    
         actions = [self.primal2pogema[action] for action in actions]
 
         _, _, terminated, truncated, _=  self.env.step(actions)
@@ -369,10 +382,14 @@ class PogemaWrapper():
                 self.goals_map[self.agents[i+1].goal_pos] = 0
                 self.agents[i+1].goal_pos = goal
                 self.goals_map[goal] = i + 1
-                new_goal = generate_new_target(self.generators[i],
+
+                if self.env.grid_config.on_target == 'restart':
+                    new_goal = generate_new_target(self.generators[i],
                               self.env.grid.point_to_component,
                               self.env.grid.component_to_points,
                               self.env.grid.positions_xy[i])
+                else:
+                    new_goal = goals[(i + 1) % (len(goals) - 1)]
                 self.agents[i+1].next_goal = (new_goal[0]- self.observation_size // 2 + 1, new_goal[1]- self.observation_size // 2 + 1)
 
         for na, pos in enumerate(self.env.get_agents_xy(ignore_borders=False)):
@@ -396,8 +413,8 @@ class PogemaWrapper():
         return (obs,validactions), terminated, truncated
     
     def save_animation(self):
-        self.env.save_animation("render.svg")
-        print ('Render saved as render.svg')
+        self.env.save_animation("render1.svg")
+        print ('Render saved as render1.svg')
         return 
     def init_agents_and_goals(self):
         """
@@ -1301,8 +1318,8 @@ OBS_SIZE                = 11   # the size of the FOV grid to apply to each agent
 NUM_FUTURE_STEPS        = 3
 
 # environment parameters
-ENVIRONMENT_SIZE        = (30, 60)  # the total size of the environment (length of one side)
-WALL_COMPONENTS         = (3, 21)
+ENVIRONMENT_SIZE        = (48, 48)  # the total size of the environment (length of one side)
+WALL_COMPONENTS         = (10, 21)
 OBSTACLE_DENSITY        = (0.2, 0.7)  # range of densities
 CHANGE_FREQUENCY        = 5000       # Frequency of Changing environment params  
 DIAG_MVMT               = False  # Diagonal movements allowed?
@@ -1382,12 +1399,12 @@ grid_map = state[1:w-1,1:h-1]
 grid_map[grid_map >= 0] = 0 
 grid_config.map = -grid_map
 
-grid_config.num_agents = 8
+grid_config.num_agents = 16
 
-grid_config.on_target="restart"
+grid_config.on_target="nothing"
 grid_config.obs_radius = 5
 grid_config.observation_type = 'MAPF'
-grid_config.max_episode_steps = 256
+grid_config.max_episode_steps = 128
 #grid_config.agents_xy = [(4,6),(6,2),(2,6),(3,4)]
 #grid_config.targets_xy = [(6,3),(6,0),(4,4),(4,6)]
 env = pogema_v0(grid_config=grid_config)
